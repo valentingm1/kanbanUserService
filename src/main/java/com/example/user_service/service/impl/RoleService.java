@@ -3,6 +3,7 @@ package com.example.user_service.service.impl;
 import com.example.user_service.dto.entrada.RoleEntradaDTO;
 import com.example.user_service.dto.salida.RoleSalidaDTO;
 import com.example.user_service.entity.Role;
+import com.example.user_service.exception.RoleAlreadyExistsException;
 import com.example.user_service.mapper.RoleMapper;
 import com.example.user_service.repository.RoleRepository;
 import com.example.user_service.service.iRoleService;
@@ -26,6 +27,11 @@ public class RoleService implements iRoleService {
     @Override
     public RoleSalidaDTO createRole(RoleEntradaDTO roleEntradaDTO){
         log.info("Creating {} as a Role",roleEntradaDTO);
+
+        if(roleRepository.findByName(roleEntradaDTO.getName()).isPresent()){
+            throw new RoleAlreadyExistsException("Role with name " + roleEntradaDTO.getName() + " already exists");
+        }
+
         Role role = roleMapper.EntradaDTOToEntity(roleEntradaDTO);
 
         Role savedRole = roleRepository.save(role);

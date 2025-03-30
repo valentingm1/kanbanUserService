@@ -1,6 +1,7 @@
 package com.example.user_service.service;
 
 import com.example.user_service.dto.entrada.UserEntradaDTO;
+import com.example.user_service.dto.salida.SignInSalidaDTO;
 import com.example.user_service.dto.salida.UserSalidaDTO;
 
 import java.util.List;
@@ -13,4 +14,6 @@ public interface iUserService {
     UserSalidaDTO getOneUser(Long id);
 
     void deleteOneUser(Long id);
+
+    SignInSalidaDTO authenticateUser(String email, String password);
 }

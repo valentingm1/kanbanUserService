@@ -1,16 +1,19 @@
 package com.example.user_service.service.impl;
 
 import com.example.user_service.dto.entrada.UserEntradaDTO;
+import com.example.user_service.dto.salida.SignInSalidaDTO;
 import com.example.user_service.dto.salida.UserSalidaDTO;
 import com.example.user_service.entity.Role;
 import com.example.user_service.entity.User;
 import com.example.user_service.mapper.UserMapper;
 import com.example.user_service.repository.RoleRepository;
 import com.example.user_service.repository.UserRepository;
+import com.example.user_service.security.JwtUtil;
 import com.example.user_service.service.iUserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -28,14 +31,16 @@ public class UserService implements iUserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final RoleService roleService; //borrar despues de terminar las pruebas
+    private final JwtUtil jwtUtil;
 
 
-    public UserService(UserRepository userRepository, RoleRepository roleRepository, UserMapper userMapper, PasswordEncoder passwordEncoder, RoleService roleService) {
+    public UserService(UserRepository userRepository, RoleRepository roleRepository, UserMapper userMapper, PasswordEncoder passwordEncoder, RoleService roleService, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
         this.roleService = roleService;
+        this.jwtUtil = jwtUtil;
     }
 
     @Override
@@ -88,5 +93,26 @@ public class UserService implements iUserService {
 
         userRepository.delete(user);
     }
+
+    @Override
+    public SignInSalidaDTO  authenticateUser(String email, String password) {
+        // Obtener el usuario por email
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Credenciales incorrectas"));
+
+        // Verificar que la contraseña sea correcta
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new BadCredentialsException("Credenciales incorrectas");
+        }
+
+        // Generar el token
+        String token = jwtUtil.generateToken(user.getEmail(), user.getRole().getName());
+
+
+        // Devolver el token, rol, correo electrónico y nombre
+        return new SignInSalidaDTO(token, user.getRole().getName(), user.getEmail(), user.getName());
+    }
+
+
 
 }
